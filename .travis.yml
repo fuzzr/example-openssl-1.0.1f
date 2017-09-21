@@ -12,11 +12,12 @@ addons:
       - libfuzzer-5.0-dev
 env:
   global:
-    - CC=clang-5.0
-    - CFLAGS="-fsanitize=address -fsanitize=coverage=trace-pc-guard,trace-cmp -g"
-    - CXX=clang++-5.0
-    - CXXFLAGS="-fsanitize=address -fsanitize=coverage=trace-pc-guard,trace-cmp -g"
+    - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+    - CFLAGS="-fsanitize=address -fsanitize-coverage=trace-pc-guard,trace-cmp -g"
+    - CXXFLAGS="-fsanitize=address -fsanitize-coverage=trace-pc-guard,trace-cmp -g"
     - LIBFUZZER=/usr/lib/llvm-5.0/lib/libFuzzer.a
+before_install:
+  - eval "${MATRIX_EVAL}"
 script:
   - cd openssl && CC="$CC $CFLAGS" ./config && make clean && make && cd ..
   - $CXX $CXXFLAGS target.cc  openssl/libssl.a openssl/libcrypto.a $LIBFUZZER -I openssl/include -o handshake_fuzzer
