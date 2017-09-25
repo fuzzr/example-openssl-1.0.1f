@@ -4,20 +4,31 @@ compiler: clang
 addons:
   apt:
     sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-trusty-5.0
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-trusty-5.0
     packages:
-      - clang-5.0
-      - clang++-5.0
-      - libfuzzer-5.0-dev
+    - clang-5.0
+    - clang++-5.0
+    - libfuzzer-5.0-dev
 env:
   global:
-    - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-    - CFLAGS="-fsanitize=address -fsanitize-coverage=trace-pc-guard,trace-cmp -g"
-    - CXXFLAGS="-fsanitize=address -fsanitize-coverage=trace-pc-guard,trace-cmp -g"
-    - LIBFUZZER=/usr/lib/llvm-5.0/lib/libFuzzer.a
+  - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+  - CFLAGS="-fsanitize=address -fsanitize-coverage=trace-pc-guard,trace-cmp -g"
+  - CXXFLAGS="-fsanitize=address -fsanitize-coverage=trace-pc-guard,trace-cmp -g"
+  - LIBFUZZER=/usr/lib/llvm-5.0/lib/libFuzzer.a
 before_install:
-  - eval "${MATRIX_EVAL}"
+- eval "${MATRIX_EVAL}"
 script:
-  - cd openssl && CC="$CC $CFLAGS" ./config && make clean && make && cd ..
-  - $CXX $CXXFLAGS target.cc  openssl/libssl.a openssl/libcrypto.a $LIBFUZZER -I openssl/include -o handshake_fuzzer
+- cd openssl && CC="$CC $CFLAGS" ./config && make clean && make && cd ..
+- "$CXX $CXXFLAGS target.cc  openssl/libssl.a openssl/libcrypto.a $LIBFUZZER -I openssl/include
+  -o handshake_fuzzer"
+- tar -czf release.tar.gz handshake_fuzzer server.key server.pem
+deploy:
+  provider: releases
+  api_key:
+    secure: MptArAXB1kKf2Hx+r86l0Ea0rYfKEXQnGaxZEjVjVPZ+DXqOYCXY2UWyun1KHwErSj92W82n4XT9BQbBVGXiM4YW75py6k9XThKS+bSuXc0cVGhX9/JtV/T1uPQpbSxtpXUyIKFaqNsO+jtl3HArVthdHGPR6XXRz609SRNM6iY+BVqczX36e/LyPODdBYxrfnRX3NeyCVZKKQaYQklJTaR3OH1U0wUjPO5E4zT5UYTV/WAr5Wr4OhfUvddVLy7HUGLJuBuSgcJGWW3qMw37Pm5pTahqV0vn4azvlMygtdMZ+Kq7acvBlRejQ6eGEbi11wMq2D2TmvO7xB1jwu0CwG71k8btY6pV4oFwLfch4oorZ8TjsQzrHoSDHImmxC2QUUZilYZVVpY3Ai0bpkSj+o1JsZzuwkaVrh5aGXVghHoi8fMdzrR1v2iQt9xVj6VWU/MeaFj4dbSfScQe5waRgXuEj9gEcCBGubTk7LTcExJD5KtLxlNTmEw58xkoHxSJeJxXKcyl9LEIkkkem2vFPr0f3khPvdVExIFzxhLQaWBQzjHM++m/4Sz0N7pXPFop1WKWO7o8Il9r5zhj2MbmyZDrnu3OMKkB9vgyDSnoOZcpDWPrbtMc6B7TcWu6BFzkpwCJCVuQFTDj6eVaVfNtoTyCqYaZWNf10fAiFqg4fbY=
+  file: release.tar.gz
+  skip_cleanup: true
+  on:
+    tags: true
+    repo: fuzzr/example-openssl-1.0.1f
