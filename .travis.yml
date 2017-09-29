@@ -32,3 +32,12 @@ deploy:
   on:
     tags: true
     repo: fuzzr/example-openssl-1.0.1f
+notifications:
+  webhooks: 
+    urls: 
+      - https://us-central1-fuzzasaurus-rex.cloudfunctions.net/travisHook
+    on_success: always
+    on_failure: never
+    on_start: never
+    on_cancel: never
+    on_error: never
